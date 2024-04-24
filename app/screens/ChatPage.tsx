@@ -1,11 +1,16 @@
-import { View, Text } from 'react-native'
+import { View, Text, Button } from 'react-native'
 import React from 'react'
+import { useApi } from '../hooks/useApi'
 
 
 const ChatPage = () => {
+
+  const { getCompletion, messages } = useApi();
+
   return (
     <View>
-      <Text>ChatPage</Text>
+      <Button title='Get Completion' onPress={() => getCompletion('test')} />
+      <Text>{messages?.length}</Text>
     </View>
   )
 }
