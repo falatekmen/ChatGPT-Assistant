@@ -1,4 +1,4 @@
-import { View, Text, Alert, StyleSheet, TextInput, TouchableOpacity } from 'react-native'
+import { View, Text, Alert, StyleSheet, TextInput, Pressable } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Toast from 'react-native-root-toast'
@@ -57,9 +57,9 @@ const SettingsPage = () => {
       {hasKey && (
         <>
           <Text style={styles.label}>You are all set!</Text>
-          <TouchableOpacity style={styles.button} onPress={removeApiKey}>
+          <Pressable style={styles.button} onPress={removeApiKey}>
             <Text style={styles.buttonText} >Remove API Key</Text>
-          </TouchableOpacity>
+          </Pressable>
         </>
       )}
       {!hasKey && (
@@ -73,9 +73,9 @@ const SettingsPage = () => {
             autoCapitalize='none'
             style={styles.input}
           />
-          <TouchableOpacity onPress={saveApiKey} style={styles.button} >
+          <Pressable onPress={saveApiKey} style={styles.button} >
             <Text style={styles.buttonText} >Save API Key</Text>
-          </TouchableOpacity>
+          </Pressable>
         </>
       )}
     </View>
