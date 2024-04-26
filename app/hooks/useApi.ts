@@ -47,7 +47,6 @@ export const useApi = () => {
 
     const getCompletion = async (prompt: string) => {
         const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY)
-
         if (!apiKey) {
             if (Platform.OS === 'web') {
                 window.alert('No API key found');
@@ -102,8 +101,32 @@ export const useApi = () => {
         }
     }
 
+    const generateImage = async (prompt: string) => {
+        const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY)
+        if (!apiKey) {
+            if (Platform.OS === 'web') {
+                window.alert('No API key found');
+            } else {
+                Alert.alert('No API key found')
+            }
+            return
+        }
+
+        const openai = new OpenAI({ apiKey: apiKey });
+        const response = await openai.images.generate({
+            model: "dall-e-3",
+            prompt,
+            n: 1,
+            size: "1024x1024",
+        });
+
+        const image_url = response.data[0].url;
+        return image_url
+    }
+
     return {
         messages,
-        getCompletion
+        getCompletion,
+        generateImage
     }
 }
