@@ -1,108 +1,96 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, Platform } from "react-native";
-import OpenAI from "openai";
-import { BehaviorSubject } from "rxjs";
+import { OpenAI } from "openai";
 import { STORAGE_API_KEY } from "../constants/constants";
 
 export enum Creator {
-    Me = 0,
-    Bot = 1,
+    User = "user",
+    Assistant = "assistant",
 }
 
 export interface Message {
-    text: string;
-    from: Creator
+    content: string;
+    role: Creator;
 }
 
-let messageSubject: BehaviorSubject<Message[]>;
-
+// Main hook for API interaction
 export const useApi = () => {
-    const dumyMessage = [
-        {
-            text: 'What is Javascript?',
-            from: Creator.Me
-        },
-        {
-            text: 'JavaScript is a high-level, interpreted programming language primarily used for creating dynamic and interactive content on the web. It was first developed by Netscape in the mid-1990s to enhance web pages with interactivity and client-side functionality. JavaScript allows developers to add features such as animations, form validation, user interface components, and event handling to websites.',
-            from: Creator.Bot
-        }
-    ]
+    // State for storing all chat messages
+    const [messages, setMessages] = useState<Message[]>([]);
 
-    const [messages, setMessages] = useState<Message[]>()
-
-    if (!messageSubject) {
-        messageSubject = new BehaviorSubject(dumyMessage)
-    }
-
-    useEffect(() => {
-        const subscription = messageSubject.subscribe((message) => {
-            setMessages(message)
-        })
-
-        return () => {
-            subscription.unsubscribe()
-        }
-    }, [])
-
+    // Function to get a completion from OpenAI
     const getCompletion = async (prompt: string) => {
-        const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY)
+        // Retrieve API key from storage
+        const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY);
+
+        // Display an alert if API key is not found
         if (!apiKey) {
+            const errorMessage = 'No API key found';
             if (Platform.OS === 'web') {
-                window.alert('No API key found');
+                window.alert(errorMessage);
             } else {
-                Alert.alert('No API key found')
+                Alert.alert(errorMessage);
             }
-            return
+            return false;
         }
 
-        const newMessage: Message = {
-            text: prompt,
-            from: Creator.Me
-        }
+        // Create a new user message with the prompt
+        const newUserMessage: Message = {
+            content: prompt,
+            role: Creator.User,
+        };
 
-        messageSubject.next([...messageSubject.value, newMessage])
+        // Update messages state with the new user message
+        const chatHistory = [...messages, newUserMessage];
+        setMessages(chatHistory);
 
         try {
-            const openai = new OpenAI({ apiKey: apiKey });
-            const params: OpenAI.Chat.ChatCompletionCreateParams = {
-                messages: [{ role: 'user', content: prompt }],
+            // Create OpenAI instance and request a chat completion
+            // (Visit the website for a different models: https://platform.openai.com/docs/models.)
+            const openai = new OpenAI({ apiKey });
+            const completion = await openai.chat.completions.create({
                 model: 'gpt-3.5-turbo',
+                messages: chatHistory,
+            });
+
+            // Extract the AI's response text
+            const responseText = completion.choices[0].message.content?.trim() || 'Something went wrong!';
+
+            // Create a new AI message with the assistant's response
+            const aiMessage: Message = {
+                content: responseText,
+                role: Creator.Assistant,
             };
 
-            const chatCompletion: OpenAI.Chat.ChatCompletion = await openai.chat.completions.create(params);
-            const response = chatCompletion.choices[0].message.content?.trim() || 'Something went wrong!'
+            // Update messages state with the new AI message
+            setMessages((prevMessages) => [...prevMessages, aiMessage]);
 
-            const botMessage: Message = {
-                text: response,
-                from: Creator.Bot
-            }
-
-            messageSubject.next([...messageSubject.value, botMessage])
-            return true
-
+            return true;
         } catch (error) {
-            if (error instanceof Error) {
-                const botMessage: Message = {
-                    text: error.message,
-                    from: Creator.Bot
-                }
-                messageSubject.next([...messageSubject.value, botMessage])
-                return false
+            // Handle any errors that occur during the completion request
+            const errorMessage = error instanceof Error ? error.message : "An error occurred";
 
-            } else {
-                const botMessage: Message = {
-                    text: "An error occured",
-                    from: Creator.Bot
-                }
-                messageSubject.next([...messageSubject.value, botMessage])
-                return false
-            }
+            // Create a new AI message with the error message
+            const aiMessage: Message = {
+                content: errorMessage,
+                role: Creator.Assistant,
+            };
+
+            // Update messages state with the new AI message
+            setMessages((prevMessages) => [...prevMessages, aiMessage]);
+
+            return false;
         }
-    }
+    };
 
+    // Handle image generation based on user prompt
     const generateImage = async (prompt: string) => {
+
+        // Retrieve API key from storage
         const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY)
+
+        // Display an alert if API key is not found
         if (!apiKey) {
             if (Platform.OS === 'web') {
                 window.alert('No API key found');
@@ -112,6 +100,8 @@ export const useApi = () => {
             return
         }
 
+        // Create OpenAI instance and generate an image
+        // (Visit the website for a different model: https://platform.openai.com/docs/models.)
         const openai = new OpenAI({ apiKey: apiKey });
         const response = await openai.images.generate({
             model: "dall-e-3",
@@ -120,6 +110,7 @@ export const useApi = () => {
             size: "1024x1024",
         });
 
+        // Return the URL of the generated image
         const image_url = response.data[0].url;
         return image_url
     }
@@ -128,5 +119,5 @@ export const useApi = () => {
         messages,
         getCompletion,
         generateImage
-    }
-}
+    };
+};
