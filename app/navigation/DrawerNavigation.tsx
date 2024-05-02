@@ -54,16 +54,16 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
             <View style={styles.footerContainer}>
                 <DrawerItem
-                    label='Usage'
-                    labelStyle={styles.drawerItemLabel}
-                    icon={() => <Ionicons name='podium-outline' size={24} color='white' />}
-                    onPress={openUsagePage}
-                />
-                <DrawerItem
                     label='API Key'
                     labelStyle={styles.drawerItemLabel}
                     icon={() => <Ionicons name='key-outline' size={24} color='white' />}
                     onPress={() => props.navigation.navigate('ApiKeyPage')}
+                />
+                <DrawerItem
+                    label='Usage'
+                    labelStyle={styles.drawerItemLabel}
+                    icon={() => <Ionicons name='podium-outline' size={24} color='white' />}
+                    onPress={openUsagePage}
                 />
             </View>
         </View>

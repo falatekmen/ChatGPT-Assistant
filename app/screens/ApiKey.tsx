@@ -28,7 +28,7 @@ const KeyPage = () => {
   const loadApiKey = async () => {
     try {
       const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY);
-      
+
       if (apiKey !== null) {
         setApiKeyValue(apiKey);
         setApiKeyExists(true);
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2F2F2F',
     borderRadius: 8,
-    padding: 12,
+    padding: 8,
     marginVertical: 24,
     backgroundColor: '#fff',
   },
@@ -124,8 +124,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#18191a',
     borderColor: '#2F2F2F',
     borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingVertical: 8,
+    paddingHorizontal: 24,
     alignSelf: 'center',
     borderWidth: 2,
   },
