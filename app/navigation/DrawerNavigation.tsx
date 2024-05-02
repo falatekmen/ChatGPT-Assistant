@@ -1,10 +1,11 @@
+import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import {
     DrawerContentComponentProps,
     DrawerContentScrollView,
     DrawerItem,
     createDrawerNavigator,
 } from '@react-navigation/drawer';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import Chat from '../screens/Chat';
@@ -72,6 +73,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
 export default function DrawerNavigation() {
 
+    const navigation = useNavigation();
     const dimensions = useWindowDimensions();
     const isLargeScreen = dimensions.width >= 768;
 
@@ -87,7 +89,13 @@ export default function DrawerNavigation() {
                 drawerType: isLargeScreen ? 'permanent' : 'front',
                 headerLeft: isLargeScreen
                     ? () => null
-                    : () => <Ionicons name='menu' size={24} color='white' style={styles.menuIcon} />
+                    : () => <Ionicons
+                        name='menu'
+                        size={24}
+                        color='white'
+                        style={styles.menuIcon}
+                        onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+                    />
             }}
         >
             <Drawer.Screen name='Chat' component={Chat} />
