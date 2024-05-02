@@ -1,8 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import { OpenAI } from 'openai';
-import { STORAGE_API_KEY } from '../constants/constants';
+import { useApiKeyContext } from '../contexts/apiKeyContext';
 
 
 // Enum for message roles
@@ -19,15 +18,17 @@ export interface Message {
 
 // Main hook for API interaction
 export const useApi = () => {
+
     // State to store all chat messages
     const [messages, setMessages] = useState<Message[]>([]);
 
+    // Retrieve API key from useApiKey hook
+    const { apiKey } = useApiKeyContext();
+
     // Function to get a completion from OpenAI
     const getCompletion = async (prompt: string) => {
-        // Retrieve API key from storage
-        const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY);
-
-        // Display an alert if API key is not found
+        
+        // Check if API key is not found
         if (!apiKey) {
             const errorMessage = 'No API key found';
             if (Platform.OS === 'web') {
@@ -50,7 +51,7 @@ export const useApi = () => {
 
         try {
             // Create OpenAI instance and request a chat completion
-            // (For a different models: https://platform.openai.com/docs/models)
+            // (For different models: https://platform.openai.com/docs/models)
             // Using `dangerouslyAllowBrowser: true` option only for web environments
             // to enable API key usage in the browser.
             const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
@@ -88,10 +89,8 @@ export const useApi = () => {
 
     // Function to generate an image based on the user prompt
     const generateImage = async (prompt: string) => {
-        // Retrieve API key from storage
-        const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY);
-
-        // Display an alert if API key is not found
+        
+        // Check if API key is not found
         if (!apiKey) {
             const errorMessage = 'No API key found';
             if (Platform.OS === 'web') {
@@ -138,7 +137,7 @@ export const useApi = () => {
             setMessages((prevMessages) => [...prevMessages, aiMessage]);
 
         } catch (error) {
-            // Handle any errors that occur during the completion request
+            // Handle any errors that occur during the image generation request
             const errorMessage = error instanceof Error ? error.message : 'An error occurred';
 
             const aiMessage: Message = {
@@ -148,7 +147,6 @@ export const useApi = () => {
 
             // Update messages state with the error AI message
             setMessages((prevMessages) => [...prevMessages, aiMessage]);
-
         }
     };
 

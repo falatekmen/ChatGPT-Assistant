@@ -1,95 +1,67 @@
 import { View, Text, Alert, StyleSheet, TextInput, Pressable } from 'react-native';
-import React, { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from 'react';
 import Toast from 'react-native-root-toast';
-import { useIsFocused } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
-import { STORAGE_API_KEY } from '../constants/constants';
+import { useApiKeyContext } from '../contexts/apiKeyContext';
 
+const ApiKeyPage = () => {
 
-const KeyPage = () => {
-
-  const [apiKeyValue, setApiKeyValue] = useState('');
-  const [apiKeyExists, setApiKeyExists] = useState(false);
-
-  const isFocused = useIsFocused();
+  const { apiKey, setApiKey } = useApiKeyContext();
+  const [apiKeyInput, setApiKeyInput] = useState(apiKey);
 
   // Function to open the OpenAI API keys page in a browser
   const openApiKeysPage = () => {
     WebBrowser.openBrowserAsync('https://platform.openai.com/api-keys');
   };
 
-  // Load API key when the page is focused
-  useEffect(() => {
-    loadApiKey();
-  }, [isFocused]);
-
-  // Load API key from storage
-  const loadApiKey = async () => {
-    try {
-      const apiKey = await AsyncStorage.getItem(STORAGE_API_KEY);
-
-      if (apiKey !== null) {
-        setApiKeyValue(apiKey);
-        setApiKeyExists(true);
-      } else {
-        setApiKeyValue('');
-        setApiKeyExists(false);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Could not load API key');
-    }
-  };
-
-  // Save API key to storage
+  // Save API key to context
   const saveApiKey = async () => {
-    if (apiKeyValue.trim().length > 0) {
-      try {
-        await AsyncStorage.setItem(STORAGE_API_KEY, apiKeyValue);
-        setApiKeyExists(true);
-        Toast.show('API key saved', { duration: Toast.durations.SHORT });
-      } catch (error) {
-        Alert.alert('Error', 'Could not save API key');
-      }
+    if (apiKeyInput.trim().length > 0) {
+      setApiKey(apiKeyInput);
+      Toast.show('API key saved', { duration: Toast.durations.SHORT });
+    } else {
+      Alert.alert('Error', 'Please enter a valid API key');
     }
   };
 
-  // Remove API key from storage
+  // Remove API key from context
   const removeApiKey = async () => {
-    try {
-      await AsyncStorage.removeItem(STORAGE_API_KEY);
-      setApiKeyExists(false);
-      setApiKeyValue('');
-      Toast.show('API key removed', { duration: Toast.durations.SHORT });
-    } catch (error) {
-      Alert.alert('Error', 'Could not remove API key');
+    setApiKey('');
+    setApiKeyInput('');
+    Toast.show('API key removed', { duration: Toast.durations.SHORT });
+  };
+
+  // Function to handle button press
+  const handleButtonPress = () => {
+    if (apiKey) {
+      removeApiKey();
+    } else {
+      saveApiKey();
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>
-        You need to add an API key to connect to the AI. You can obtain the key by visiting
+        To connect with AI, add an API key. You can obtain an API key from
         {' '}
         <Text style={styles.linkText} onPress={openApiKeysPage}>
           https://platform.openai.com/api-keys
         </Text>
+        .
       </Text>
       <TextInput
-        value={apiKeyValue}
-        onChangeText={setApiKeyValue}
+        value={apiKeyInput}
+        onChangeText={setApiKeyInput}
         placeholder='Enter your API key'
         autoCorrect={false}
         autoCapitalize='none'
         style={styles.input}
-        editable={!apiKeyExists}
+        editable={!apiKey}
       />
-      <Pressable
-        onPress={apiKeyExists ? removeApiKey : saveApiKey}
-        style={styles.button}
-      >
+      <Pressable onPress={handleButtonPress} style={styles.button}>
         <Text style={styles.buttonText}>
-          {apiKeyExists ? 'Remove' : 'Save'}
+          {apiKey ? 'Remove' : 'Save'}
         </Text>
       </Pressable>
     </View>
@@ -136,4 +108,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default KeyPage;
+export default ApiKeyPage;
